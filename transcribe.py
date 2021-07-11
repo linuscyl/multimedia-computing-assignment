@@ -83,6 +83,7 @@ def read_audio(ws, timeout):
         # need to indicate that otherwise the stream service
         # interprets this as text control messages.
         ws.send(data, ABNF.OPCODE_BINARY)
+        # print("loop data" + ws.send(data, ABNF.OPCODE_BINARY))
 
     # Disconnect the audio stream
     stream.stop_stream()
@@ -112,6 +113,7 @@ def on_message(self, msg):
     off for later.
     """
     global LAST
+    global STTresult
     data = json.loads(msg)
     if "results" in data:
         if data["results"][0]["final"]:
@@ -120,7 +122,15 @@ def on_message(self, msg):
         else:
             LAST = data
         # This prints out the current fragment that we are working on
-        print(data['results'][0]['alternatives'][0]['transcript'])
+        STTresult = data['results'][0]['alternatives'][0]['transcript']
+        print("Return answer is: " + STTresult)
+
+
+def getSTTresult():
+    if "STTresult" in globals():
+        return STTresult
+    else:
+        return ""
 
 
 def on_error(self, error):
@@ -163,6 +173,7 @@ def on_open(ws):
     threading.Thread(target=read_audio,
                      args=(ws, args.timeout)).start()
 
+
 def get_url():
     config = configparser.RawConfigParser()
     config.read('speech.cfg')
@@ -172,7 +183,8 @@ def get_url():
     region = config.get('auth', 'region')
     host = REGION_MAP[region]
     return ("wss://{}/speech-to-text/api/v1/recognize"
-           "?model=en-US_BroadbandModel").format(host)
+            "?model=en-US_BroadbandModel").format(host)
+
 
 def get_auth():
     config = configparser.RawConfigParser()
@@ -216,6 +228,7 @@ def main():
     # call, so it won't return until the ws.close() gets called (after
     # 6 seconds in the dedicated thread).
     ws.run_forever()
+    return STTresult
 
 
 if __name__ == "__main__":
