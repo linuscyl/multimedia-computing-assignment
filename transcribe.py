@@ -123,7 +123,7 @@ def on_message(self, msg):
             LAST = data
         # This prints out the current fragment that we are working on
         STTresult = data['results'][0]['alternatives'][0]['transcript']
-        print("Return answer is: " + STTresult)
+        print("Result: " + STTresult)
 
 
 def getSTTresult():
